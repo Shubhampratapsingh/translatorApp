@@ -1,0 +1,11 @@
+#noData {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 50vh;
+}
+#noData img {
+  width: 100px;
+}
