@@ -23,9 +23,18 @@ function Dashboard() {
     const newMessage = event.target.value;
     setMessage(newMessage);
 
+    // Emit message in real-time as the user types
     if (newMessage.trim() !== "") {
       socket.emit("send_message", { message: newMessage, room });
     }
+  };
+
+  const leaveRoom = () => {
+    socket.emit("leave_room", room); // Emit leave room event
+    setIsActiveRoom(false); // Update state to indicate room is no longer active
+    setMessage(""); // Clear the message state
+    setMessageReceived(""); // Optionally clear received message state
+    setRoom(""); // Clear the room state
   };
 
   useEffect(() => {
@@ -59,8 +68,14 @@ function Dashboard() {
           </button>
         </div>
       ) : (
-        <div>
-          <h1 className="text-2xl font-bold mb-6">{room}</h1>
+        <div className="flex mb-4 w-full max-w-md items-center justify-center">
+          <h1 className="text-2xl font-bold mb-6 mr-2">{room}</h1>
+          <button
+            onClick={leaveRoom}
+            className="bg-red-500 text-white p-2 rounded hover:bg-red-600 transition mb-4 text-sm"
+          >
+            Leave Room
+          </button>
         </div>
       )}
 
@@ -70,7 +85,7 @@ function Dashboard() {
           placeholder="Enter Your Message..."
           className="p-2 border border-gray-300 rounded mb-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={message}
-          onChange={handleMessageChange}
+          onChange={handleMessageChange} // Update message in real-time
         />
       </div>
 
