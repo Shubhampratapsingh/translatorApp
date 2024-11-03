@@ -5,6 +5,7 @@ import SpeechRecognition, {
 } from "react-speech-recognition";
 import { Collapse } from "antd";
 import { LanguageDetector } from "../../utils/language-detection";
+import { TranscriptTranslator } from "../../utils/translator";
 import ISO6391 from "iso-639-1";
 
 const socket = io.connect("http://localhost:3001");
@@ -16,12 +17,15 @@ function Translator() {
 
   // Messages State
   const [messageReceived, setMessageReceived] = useState("");
+  const [translatedReceivedMessage, setTranslatedReceivedMessage] =
+    useState("");
 
   // Speech recognition setup
   const { transcript, resetTranscript, browserSupportsSpeechRecognition } =
     useSpeechRecognition();
   const [isListening, setIsListening] = useState(false);
-  const [languageDetected, setLanguageDetected] = useState({});
+  const [myLanguageDetected, setMyLanguageDetected] = useState({});
+  const [otherUserlanguageDetected, setOtherLanguageDetected] = useState({});
 
   // useEffect to handle incoming messages
   useEffect(() => {
@@ -45,7 +49,7 @@ function Translator() {
         // console.log("detected Language", detectedLanguage);
         if (detectedLanguage) {
           let lang = ISO6391.getName(`${detectedLanguage?.detectedLanguage}`);
-          setLanguageDetected({
+          setMyLanguageDetected({
             langCode: detectedLanguage?.detectedLanguage,
             language: lang,
           });
@@ -53,6 +57,36 @@ function Translator() {
       })
       .catch((error) => {
         console.error("Error detecting language:", error);
+      });
+
+    LanguageDetector(messageReceived)
+      .then((detectedLanguage) => {
+        // console.log("detected Language", detectedLanguage);
+        if (detectedLanguage) {
+          let lang = ISO6391.getName(`${detectedLanguage?.detectedLanguage}`);
+          setOtherLanguageDetected({
+            langCode: detectedLanguage?.detectedLanguage,
+            language: lang,
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error detecting language:", error);
+      });
+
+    const transcriptLanguage = {
+      sourceLanguage: otherUserlanguageDetected?.langCode || "ja",
+      targetLanguage: myLanguageDetected?.langCode || "en",
+    };
+    TranscriptTranslator(messageReceived || "", transcriptLanguage)
+      .then((translated) => {
+        if (translated) {
+          console.log("translated Language", translated);
+          setTranslatedReceivedMessage(translated);
+        }
+      })
+      .catch((error) => {
+        console.error("Error translating language:", error);
       });
   }, [transcript, isActiveRoom, room]);
 
@@ -68,7 +102,9 @@ function Translator() {
     setIsActiveRoom(false);
     setMessageReceived("");
     setRoom("");
-    setLanguageDetected("");
+    setMyLanguageDetected({});
+    setOtherLanguageDetected({});
+    setTranslatedReceivedMessage("");
     SpeechRecognition.stopListening();
     resetTranscript();
   };
@@ -76,7 +112,7 @@ function Translator() {
   const handleStartListening = () => {
     SpeechRecognition.startListening({
       continuous: true,
-      language: languageDetected?.langCode || "en-IN",
+      language: myLanguageDetected?.langCode || "en-IN",
     });
     setIsListening(true);
   };
@@ -94,14 +130,23 @@ function Translator() {
     {
       key: "1",
       label: "Translated transcript from other user",
-      children: <p>This is translated</p>,
+      children: (
+        <p>
+          {translatedReceivedMessage ||
+            "Translated transcripts are not available."}
+        </p>
+      ),
     },
     {
       key: "2",
       label: "Your translated transcript",
-      children: <p>This is translated</p>,
+      children: <p>Translated transcripts are not available.</p>,
     },
   ];
+
+  const summarizeMeeting = () => {};
+
+  const saveDetails = () => {};
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
@@ -161,7 +206,7 @@ function Translator() {
 
           <h2 className="text-lg font-semibold">
             Transcript from other user in{" "}
-            {languageDetected?.language || <span>&#129300;</span>}
+            {otherUserlanguageDetected?.language || <span>&#129300;</span>}
           </h2>
           <div className="p-3 border border-gray-200 rounded bg-gray-100 mt-2 text-gray-700">
             {messageReceived || "No transcript received yet."}
@@ -176,14 +221,14 @@ function Translator() {
       <div className="footer-buttons mt-6">
         <div className="flex space-x-4 mb-6">
           <button
-            onClick={console.log("Summary")}
+            onClick={summarizeMeeting}
             className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition"
           >
             Summarize
           </button>
 
           <button
-            onClick={console.log("Saved")}
+            onClick={saveDetails}
             className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition"
           >
             Save
