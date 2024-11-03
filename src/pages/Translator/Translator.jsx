@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
-import { Collapse } from "antd";
 import { LanguageDetector } from "../../utils/language-detection";
 import { TranscriptTranslator } from "../../utils/translator";
 import ISO6391 from "iso-639-1";
@@ -30,7 +29,7 @@ function Translator() {
   // useEffect to handle incoming messages
   useEffect(() => {
     socket.on("receive_message", (data) => {
-      setMessageReceived(data.message);
+      setMessageReceived(data?.message);
     });
 
     // Clean up on unmount
@@ -44,50 +43,6 @@ function Translator() {
     if (isActiveRoom && transcript.trim() !== "") {
       socket.emit("send_message", { message: transcript, room });
     }
-    LanguageDetector(transcript)
-      .then((detectedLanguage) => {
-        // console.log("detected Language", detectedLanguage);
-        if (detectedLanguage) {
-          let lang = ISO6391.getName(`${detectedLanguage?.detectedLanguage}`);
-          setMyLanguageDetected({
-            langCode: detectedLanguage?.detectedLanguage,
-            language: lang,
-          });
-        }
-      })
-      .catch((error) => {
-        console.error("Error detecting language:", error);
-      });
-
-    LanguageDetector(messageReceived)
-      .then((detectedLanguage) => {
-        // console.log("detected Language", detectedLanguage);
-        if (detectedLanguage) {
-          let lang = ISO6391.getName(`${detectedLanguage?.detectedLanguage}`);
-          setOtherLanguageDetected({
-            langCode: detectedLanguage?.detectedLanguage,
-            language: lang,
-          });
-        }
-      })
-      .catch((error) => {
-        console.error("Error detecting language:", error);
-      });
-
-    const transcriptLanguage = {
-      sourceLanguage: otherUserlanguageDetected?.langCode || "ja",
-      targetLanguage: myLanguageDetected?.langCode || "en",
-    };
-    TranscriptTranslator(messageReceived || "", transcriptLanguage)
-      .then((translated) => {
-        if (translated) {
-          console.log("translated Language", translated);
-          setTranslatedReceivedMessage(translated);
-        }
-      })
-      .catch((error) => {
-        console.error("Error translating language:", error);
-      });
   }, [transcript, isActiveRoom, room]);
 
   const joinRoom = () => {
@@ -112,7 +67,6 @@ function Translator() {
   const handleStartListening = () => {
     SpeechRecognition.startListening({
       continuous: true,
-      language: myLanguageDetected?.langCode || "en-IN",
     });
     setIsListening(true);
   };
@@ -126,23 +80,70 @@ function Translator() {
     return <p>Speech recognition is not supported in this browser.</p>;
   }
 
-  const collpaseItems = [
-    {
-      key: "1",
-      label: "Translated transcript from other user",
-      children: (
-        <p>
-          {translatedReceivedMessage ||
-            "Translated transcripts are not available."}
-        </p>
-      ),
-    },
-    {
-      key: "2",
-      label: "Your translated transcript",
-      children: <p>Translated transcripts are not available.</p>,
-    },
-  ];
+  const translateTranscript = () => {
+    if (transcript) {
+      LanguageDetector(transcript)
+        .then((myDetectedLanguage) => {
+          // Check if the my language was detected
+          if (!myDetectedLanguage) {
+            console.error("Could not detect user's language.");
+            return;
+          }
+
+          const myLangCode = myDetectedLanguage?.detectedLanguage;
+
+          if (messageReceived) {
+            LanguageDetector(messageReceived)
+              .then((otherDetectedLanguage) => {
+                // Check if the other user's language was detected
+                if (!otherDetectedLanguage) {
+                  console.error("Could not detect other user's language.");
+                  return;
+                }
+
+                // const otherLangCode = otherDetectedLanguage?.detectedLanguage;
+                const otherLangCode = "ja";
+
+                console.log("Translating:", {
+                  transcript,
+                  messageReceived,
+                  myLangCode,
+                  otherLangCode,
+                  translatedReceivedMessage,
+                });
+
+                if (
+                  messageReceived.trim() !== "" &&
+                  otherLangCode &&
+                  myLangCode
+                ) {
+                  const transcriptLanguage = {
+                    sourceLanguage: otherLangCode,
+                    targetLanguage: myLangCode,
+                  };
+
+                  TranscriptTranslator(messageReceived, transcriptLanguage)
+                    .then((translated) => {
+                      console.log("Translated text:", translated);
+                      if (translated) {
+                        setTranslatedReceivedMessage(translated);
+                      }
+                    })
+                    .catch((error) => {
+                      console.error("Error translating language:", error);
+                    });
+                }
+              })
+              .catch((error) => {
+                console.error("Error detecting language:", error);
+              });
+          }
+        })
+        .catch((error) => {
+          console.error("Error detecting language:", error);
+        });
+    }
+  };
 
   const summarizeMeeting = () => {};
 
@@ -150,8 +151,8 @@ function Translator() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* speech to text section */}
+      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Speech to text section */}
         <div className="p-6 bg-white rounded-lg shadow-lg">
           {!isActiveRoom ? (
             <div className="flex flex-col mb-6">
@@ -213,9 +214,25 @@ function Translator() {
           </div>
         </div>
 
-        {/* Transalted transcript section */}
+        {/* Translated transcript section */}
         <div className="p-6 bg-white rounded-lg shadow-lg">
-          <Collapse items={collpaseItems} defaultActiveKey={["1"]} />
+          <div className="flex justify-between">
+            <h2 className="text-lg font-semibold mb-4">
+              Translated Transcript from other user:
+            </h2>
+            {messageReceived?.length > 0 && (
+              <button
+                onClick={translateTranscript}
+                className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition"
+              >
+                Translate
+              </button>
+            )}
+          </div>
+          <p className="text-gray-700 mb-4">
+            {translatedReceivedMessage ||
+              "Translated transcripts are not available."}
+          </p>
         </div>
       </div>
       <div className="footer-buttons mt-6">

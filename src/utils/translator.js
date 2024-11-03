@@ -22,10 +22,8 @@ export const TranscriptTranslator = async (transcript, languageCode) => {
     alert("Error occured while translating the transcript");
     return;
   }
-
   if (transcript) {
     const translation = await window?.translator?.translate(transcript);
-    console.log("js file test", transcript, translation, languageCode);
     if (translation) {
       return translation;
     }

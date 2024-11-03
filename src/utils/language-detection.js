@@ -24,7 +24,6 @@ export const LanguageDetector = async (userText) => {
     const highestConfidence = results?.reduce((max, obj) => {
       return obj?.confidence > max?.confidence ? obj : max;
     });
-
     return highestConfidence;
   }
 };
