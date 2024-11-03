@@ -11,6 +11,7 @@ import Navbar from "./components/Navbar/Navbar";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
 import Dashboard from "./pages/Dashboard/Dashboard";
+import Translator from "./pages/Translator/Translator";
 import NoData from "./components/NoData/NoData";
 // import About from "./pages/About-us/About";
 // import Privacy from "./pages/Privacy-Policy/Privacy";
@@ -31,6 +32,14 @@ function App() {
             element={
               <Protect fallback={<Navigate to="/login" />}>
                 <Dashboard />
+              </Protect>
+            }
+          />
+          <Route
+            path="/translator"
+            element={
+              <Protect fallback={<Navigate to="/login" />}>
+                <Translator />
               </Protect>
             }
           />

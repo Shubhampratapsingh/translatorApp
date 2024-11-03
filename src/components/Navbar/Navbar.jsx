@@ -3,6 +3,7 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import { Layout, Menu } from "antd";
 import { MenuOutlined } from "@ant-design/icons";
+import "./Navbar.css";
 
 const Navbar = () => {
   const { Header } = Layout;
@@ -17,8 +18,8 @@ const Navbar = () => {
             </Link>
           </SignedOut>
           <SignedIn>
-            <Link to="/dashboard" className="hover:text-gray-900">
-              Dashboard
+            <Link to="/translator" className="hover:text-gray-900">
+              Translator
             </Link>
           </SignedIn>
         </>
@@ -33,6 +34,11 @@ const Navbar = () => {
               Register
             </Link>
           </SignedOut>
+          <SignedIn>
+            <Link to="/dashboard" className="hover:text-gray-900">
+              Dashboard
+            </Link>
+          </SignedIn>
         </>
       ),
     },
@@ -40,7 +46,7 @@ const Navbar = () => {
 
   return (
     <>
-      <Header className="bg-white flex items-center shadow-sm">
+      <Header className="bg-white flex items-center shadow-sm navbar-section">
         <Link
           to="/"
           className="flex title-font font-medium items-center text-gray-900 mb-4 md:mb-0"
@@ -54,7 +60,7 @@ const Navbar = () => {
           className="flex-1 justify-end min-w-0"
           overflowedIndicator={<MenuOutlined />}
         />
-        <div className="userAccount flex">
+        <div className="userAccount flex items-center ml-3">
           <SignedIn>
             <UserButton />
           </SignedIn>
