@@ -13,10 +13,10 @@ export const TranscriptTranslator = async (transcript, languageCode) => {
     } else {
       // The translator can be used after the model download.
       translator = await window?.translation?.createTranslator(languagePair);
-      translator.addEventListener("downloadprogress", (e) => {
-        console.log(e.loaded, e.total);
+      translator?.addEventListener("downloadprogress", (e) => {
+        console.log(e?.loaded, e?.total);
       });
-      await translator.ready;
+      await translator?.ready;
     }
   } else {
     alert("Error occured while translating the transcript");
@@ -24,7 +24,8 @@ export const TranscriptTranslator = async (transcript, languageCode) => {
   }
 
   if (transcript) {
-    const translation = await translator.translate(transcript);
+    const translation = await window?.translator?.translate(transcript);
+    console.log("js file test", transcript, translation, languageCode);
     if (translation) {
       return translation;
     }

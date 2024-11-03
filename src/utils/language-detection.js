@@ -8,7 +8,7 @@ export const LanguageDetector = async (userText) => {
     } else {
       // The language detector can be used after the model download.
       detector = await window?.translation?.createDetector();
-      detector.addEventListener("downloadprogress", (e) => {
+      detector?.addEventListener("downloadprogress", (e) => {
         console.log("Loaded", e?.loaded, e?.total);
       });
       await detector?.ready;
