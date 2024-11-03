@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
+import { Collapse } from "antd";
+import { LanguageDetector } from "../../utils/language-detection";
+import ISO6391 from "iso-639-1";
 
 const socket = io.connect("http://localhost:3001");
 
@@ -18,6 +21,7 @@ function Translator() {
   const { transcript, resetTranscript, browserSupportsSpeechRecognition } =
     useSpeechRecognition();
   const [isListening, setIsListening] = useState(false);
+  const [languageDetected, setLanguageDetected] = useState({});
 
   // useEffect to handle incoming messages
   useEffect(() => {
@@ -36,6 +40,20 @@ function Translator() {
     if (isActiveRoom && transcript.trim() !== "") {
       socket.emit("send_message", { message: transcript, room });
     }
+    LanguageDetector(transcript)
+      .then((detectedLanguage) => {
+        // console.log("detected Language", detectedLanguage);
+        if (detectedLanguage) {
+          let lang = ISO6391.getName(`${detectedLanguage?.detectedLanguage}`);
+          setLanguageDetected({
+            langCode: detectedLanguage?.detectedLanguage,
+            language: lang,
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error detecting language:", error);
+      });
   }, [transcript, isActiveRoom, room]);
 
   const joinRoom = () => {
@@ -50,12 +68,16 @@ function Translator() {
     setIsActiveRoom(false);
     setMessageReceived("");
     setRoom("");
+    setLanguageDetected("");
     SpeechRecognition.stopListening();
     resetTranscript();
   };
 
   const handleStartListening = () => {
-    SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
+    SpeechRecognition.startListening({
+      continuous: true,
+      language: languageDetected?.langCode || "en-IN",
+    });
     setIsListening(true);
   };
 
@@ -68,10 +90,23 @@ function Translator() {
     return <p>Speech recognition is not supported in this browser.</p>;
   }
 
+  const collpaseItems = [
+    {
+      key: "1",
+      label: "Translated transcript from other user",
+      children: <p>This is translated</p>,
+    },
+    {
+      key: "2",
+      label: "Your translated transcript",
+      children: <p>This is translated</p>,
+    },
+  ];
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* sppech to text section */}
+        {/* speech to text section */}
         <div className="p-6 bg-white rounded-lg shadow-lg">
           {!isActiveRoom ? (
             <div className="flex flex-col mb-6">
@@ -124,7 +159,10 @@ function Translator() {
             )}
           </div>
 
-          <h2 className="text-lg font-semibold">Transcript from other user:</h2>
+          <h2 className="text-lg font-semibold">
+            Transcript from other user in{" "}
+            {languageDetected?.language || <span>&#129300;</span>}
+          </h2>
           <div className="p-3 border border-gray-200 rounded bg-gray-100 mt-2 text-gray-700">
             {messageReceived || "No transcript received yet."}
           </div>
@@ -132,8 +170,7 @@ function Translator() {
 
         {/* Transalted transcript section */}
         <div className="p-6 bg-white rounded-lg shadow-lg">
-          <h2 className="text-lg font-semibold mb-4">Translated Transcript:</h2>
-          <p className="text-gray-700 mb-4">This is translated</p>
+          <Collapse items={collpaseItems} defaultActiveKey={["1"]} />
         </div>
       </div>
       <div className="footer-buttons mt-6">
