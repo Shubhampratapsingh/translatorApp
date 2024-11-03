@@ -5,7 +5,7 @@ import SpeechRecognition, {
 } from "react-speech-recognition";
 import { LanguageDetector } from "../../utils/language-detection";
 import { TranscriptTranslator } from "../../utils/translator";
-import ISO6391 from "iso-639-1";
+import { TextSummarizer } from "../../utils/summarizer";
 
 const socket = io.connect("http://localhost:3001");
 
@@ -19,12 +19,11 @@ function Translator() {
   const [translatedReceivedMessage, setTranslatedReceivedMessage] =
     useState("");
 
+  const [summaryText, setSummaryText] = useState("");
   // Speech recognition setup
   const { transcript, resetTranscript, browserSupportsSpeechRecognition } =
     useSpeechRecognition();
   const [isListening, setIsListening] = useState(false);
-  const [myLanguageDetected, setMyLanguageDetected] = useState({});
-  const [otherUserlanguageDetected, setOtherLanguageDetected] = useState({});
 
   // useEffect to handle incoming messages
   useEffect(() => {
@@ -57,8 +56,6 @@ function Translator() {
     setIsActiveRoom(false);
     setMessageReceived("");
     setRoom("");
-    setMyLanguageDetected({});
-    setOtherLanguageDetected({});
     setTranslatedReceivedMessage("");
     SpeechRecognition.stopListening();
     resetTranscript();
@@ -84,9 +81,7 @@ function Translator() {
     if (transcript) {
       LanguageDetector(transcript)
         .then((myDetectedLanguage) => {
-          // Check if the my language was detected
           if (!myDetectedLanguage) {
-            console.error("Could not detect user's language.");
             return;
           }
 
@@ -95,22 +90,11 @@ function Translator() {
           if (messageReceived) {
             LanguageDetector(messageReceived)
               .then((otherDetectedLanguage) => {
-                // Check if the other user's language was detected
                 if (!otherDetectedLanguage) {
-                  console.error("Could not detect other user's language.");
                   return;
                 }
 
-                // const otherLangCode = otherDetectedLanguage?.detectedLanguage;
-                const otherLangCode = "ja";
-
-                console.log("Translating:", {
-                  transcript,
-                  messageReceived,
-                  myLangCode,
-                  otherLangCode,
-                  translatedReceivedMessage,
-                });
+                const otherLangCode = otherDetectedLanguage?.detectedLanguage;
 
                 if (
                   messageReceived.trim() !== "" &&
@@ -145,7 +129,11 @@ function Translator() {
     }
   };
 
-  const summarizeMeeting = () => {};
+  const summarizeMeeting = () => {
+    const finalText = transcript + messageReceived;
+    const summary = TextSummarizer(finalText);
+    setSummaryText(summary);
+  };
 
   const saveDetails = () => {};
 
@@ -205,10 +193,7 @@ function Translator() {
             )}
           </div>
 
-          <h2 className="text-lg font-semibold">
-            Transcript from other user in{" "}
-            {otherUserlanguageDetected?.language || <span>&#129300;</span>}
-          </h2>
+          <h2 className="text-lg font-semibold">Transcript from other user:</h2>
           <div className="p-3 border border-gray-200 rounded bg-gray-100 mt-2 text-gray-700">
             {messageReceived || "No transcript received yet."}
           </div>
@@ -216,10 +201,8 @@ function Translator() {
 
         {/* Translated transcript section */}
         <div className="p-6 bg-white rounded-lg shadow-lg">
-          <div className="flex justify-between">
-            <h2 className="text-lg font-semibold mb-4">
-              Translated Transcript from other user:
-            </h2>
+          <div className="flex justify-between mb-4">
+            <h2 className="text-lg font-semibold">Translated Transcript:</h2>
             {messageReceived?.length > 0 && (
               <button
                 onClick={translateTranscript}
@@ -234,6 +217,13 @@ function Translator() {
               "Translated transcripts are not available."}
           </p>
         </div>
+      </div>
+      <div className="summary my-6">
+        {summaryText.length > 0 ? (
+          <p>{summaryText}</p>
+        ) : (
+          <h1>Summary not available.</h1>
+        )}
       </div>
       <div className="footer-buttons mt-6">
         <div className="flex space-x-4 mb-6">

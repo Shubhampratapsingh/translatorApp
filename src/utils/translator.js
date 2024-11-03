@@ -1,3 +1,18 @@
+import { translateText } from "../services";
+
+async function translateAPI(convertTo, text) {
+  let formattedCode =
+    convertTo && convertTo.includes("-") ? convertTo.split("-")[0] : convertTo;
+  try {
+    const res = await translateText(formattedCode, text);
+    console.log("res is", res);
+    if (res) {
+      return res?.trans;
+    }
+  } catch (error) {
+    console.error("Error occured while translating");
+  }
+}
 export const TranscriptTranslator = async (transcript, languageCode) => {
   const languagePair = {
     sourceLanguage: languageCode?.sourceLanguage,
@@ -16,14 +31,22 @@ export const TranscriptTranslator = async (transcript, languageCode) => {
       translator?.addEventListener("downloadprogress", (e) => {
         console.log(e?.loaded, e?.total);
       });
-      await translator?.ready;
+      if (translator) {
+        await translator?.ready;
+      } else {
+        let res = await translateAPI(languageCode?.targetLanguage, transcript);
+        return res;
+      }
     }
   } else {
-    alert("Error occured while translating the transcript");
-    return;
+    alert(
+      "Error occured while translating the transcript, switching to google translate."
+    );
+    let res = translateAPI(languageCode?.targetLanguage, transcript);
+    return res;
   }
   if (transcript) {
-    const translation = await window?.translator?.translate(transcript);
+    const translation = await translator?.translate(transcript);
     if (translation) {
       return translation;
     }

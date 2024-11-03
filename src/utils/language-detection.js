@@ -1,3 +1,8 @@
+const getPrimaryLanguage = () => {
+  const userLang = window.navigator.userLanguage || window.navigator.language;
+  return userLang && userLang.includes("-") ? userLang.split("-")[0] : userLang;
+};
+
 export const LanguageDetector = async (userText) => {
   const canDetect = await window?.translation?.canDetect();
   let detector;
@@ -8,15 +13,24 @@ export const LanguageDetector = async (userText) => {
     } else {
       // The language detector can be used after the model download.
       detector = await window?.translation?.createDetector();
-      detector?.addEventListener("downloadprogress", (e) => {
-        console.log("Loaded", e?.loaded, e?.total);
-      });
-      await detector?.ready;
+      detector?.addEventListener("downloadprogress", (e) => {});
+      if (detector) {
+        await detector?.ready;
+      } else {
+        alert("Unable to detect user Language, switching to browser language.");
+        const detectedLanguage = getPrimaryLanguage();
+        return {
+          detectedLanguage: detectedLanguage,
+        };
+      }
     }
   } else {
     // The language detector can't be used at all.
-    alert("Unable to detect user Language");
-    return;
+    alert("Unable to detect user Language, switching to browser language.");
+    const detectedLanguage = getPrimaryLanguage();
+    return {
+      detectedLanguage: detectedLanguage,
+    };
   }
 
   const results = await detector?.detect(userText);
