@@ -6,8 +6,9 @@ import SpeechRecognition, {
 import { LanguageDetector } from "../../utils/language-detection";
 import { TranscriptTranslator } from "../../utils/translator";
 import { TextSummarizer } from "../../utils/summarizer";
+import { API_URL } from "../../constants/api-constants";
 
-const socket = io.connect("http://localhost:3001");
+const socket = io.connect(API_URL);
 
 function Translator() {
   // Room State
