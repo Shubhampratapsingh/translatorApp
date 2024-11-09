@@ -1,3 +1,5 @@
+import { openNotification } from "./notification";
+
 export const TextSummarizer = async (userText) => {
   const canSummarize = await window?.ai?.summarizer.capabilities();
   let summarizer;
@@ -14,7 +16,7 @@ export const TextSummarizer = async (userText) => {
       await summarizer?.ready;
     }
   } else {
-    alert("Unable to summarize.");
+    openNotification("error", "Unable to Summarize.", "");
     return "";
   }
 
@@ -23,6 +25,6 @@ export const TextSummarizer = async (userText) => {
     summarizer?.destroy();
     return result;
   } else {
-    alert("Transcript is not available.");
+    openNotification("error", "Transcript not found.", "");
   }
 };

@@ -1,3 +1,5 @@
+import { openNotification } from "./notification";
+
 const getPrimaryLanguage = () => {
   const userLang = window.navigator.userLanguage || window.navigator.language;
   return userLang && userLang.includes("-") ? userLang.split("-")[0] : userLang;
@@ -17,7 +19,11 @@ export const LanguageDetector = async (userText) => {
       if (detector) {
         await detector?.ready;
       } else {
-        alert("Unable to detect user Language, switching to browser language.");
+        openNotification(
+          "error",
+          "Unable to detect user Language, switching to browser language.",
+          ""
+        );
         const detectedLanguage = getPrimaryLanguage();
         return {
           detectedLanguage: detectedLanguage,
@@ -26,7 +32,11 @@ export const LanguageDetector = async (userText) => {
     }
   } else {
     // The language detector can't be used at all.
-    alert("Unable to detect user Language, switching to browser language.");
+    openNotification(
+      "error",
+      "Unable to detect user Language, switching to browser language.",
+      ""
+    );
     const detectedLanguage = getPrimaryLanguage();
     return {
       detectedLanguage: detectedLanguage,

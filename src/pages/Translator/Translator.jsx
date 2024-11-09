@@ -7,6 +7,9 @@ import { LanguageDetector } from "../../utils/language-detection";
 import { TranscriptTranslator } from "../../utils/translator";
 import { TextSummarizer } from "../../utils/summarizer";
 import { API_URL } from "../../constants/api-constants";
+import { saveTranscript } from "../../services";
+import { useAuth } from "@clerk/clerk-react";
+import { openNotification } from "../../utils/notification";
 
 const socket = io.connect(API_URL);
 
@@ -25,6 +28,8 @@ function Translator() {
   const { transcript, resetTranscript, browserSupportsSpeechRecognition } =
     useSpeechRecognition();
   const [isListening, setIsListening] = useState(false);
+
+  const { getToken } = useAuth();
 
   // useEffect to handle incoming messages
   useEffect(() => {
@@ -136,7 +141,22 @@ function Translator() {
     setSummaryText(summary);
   };
 
-  const saveDetails = () => {};
+  const saveDetails = async () => {
+    try {
+      const token = await getToken();
+      const payload = {
+        user1_transcript: transcript,
+        user2_transcript: messageReceived,
+        summary: summaryText,
+      };
+      const res = await saveTranscript(payload, token);
+      if (res) {
+        openNotification("success", "Saved successfully", "");
+      }
+    } catch (error) {
+      openNotification("error", "Error occurred while saving transcripts.", "");
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">

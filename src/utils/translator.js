@@ -1,11 +1,11 @@
 import { translateText } from "../services";
+import { openNotification } from "./notification";
 
 async function translateAPI(convertTo, text) {
   let formattedCode =
     convertTo && convertTo.includes("-") ? convertTo.split("-")[0] : convertTo;
   try {
     const res = await translateText(formattedCode, text);
-    console.log("res is", res);
     if (res) {
       return res?.trans;
     }
@@ -39,8 +39,10 @@ export const TranscriptTranslator = async (transcript, languageCode) => {
       }
     }
   } else {
-    alert(
-      "Error occured while translating the transcript, switching to google translate."
+    openNotification(
+      "error",
+      "Error occured while translating the transcript, switching to google translate.",
+      ""
     );
     let res = translateAPI(languageCode?.targetLanguage, transcript);
     return res;

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { API_END_POINTS } from "../constants/api-constants";
 
 export async function translateText(convertTo, text) {
   const options = {
@@ -21,5 +22,19 @@ export async function translateText(convertTo, text) {
     return response?.data;
   } catch (error) {
     console.error(error);
+  }
+}
+
+export async function saveTranscript(payload, token) {
+  try {
+    const response = await axios.post(API_END_POINTS.ADD_TRANSCRIPT, payload, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
   }
 }
