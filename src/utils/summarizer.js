@@ -11,7 +11,7 @@ export const TextSummarizer = async (userText) => {
       // The summarizer can be used after the model download.
       summarizer = await window?.ai.summarizer?.create();
       summarizer?.addEventListener("downloadprogress", (e) => {
-        console.log(e?.loaded, e?.total);
+        // console.log(e?.loaded, e?.total);
       });
       await summarizer?.ready;
     }

@@ -29,7 +29,7 @@ export const TranscriptTranslator = async (transcript, languageCode) => {
       // The translator can be used after the model download.
       translator = await window?.translation?.createTranslator(languagePair);
       translator?.addEventListener("downloadprogress", (e) => {
-        console.log(e?.loaded, e?.total);
+        // console.log(e?.loaded, e?.total);
       });
       if (translator) {
         await translator?.ready;

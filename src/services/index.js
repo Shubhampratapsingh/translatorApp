@@ -38,3 +38,34 @@ export async function saveTranscript(payload, token) {
     throw error;
   }
 }
+
+export async function fetchTranscript(token) {
+  try {
+    const response = await axios.get(API_END_POINTS.GET_TRANSCRIPT, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function deleteTranscript(documentID, token) {
+  try {
+    const response = await axios.delete(
+      `${API_END_POINTS.DELETE_TRANSCRIPT}/${documentID}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}

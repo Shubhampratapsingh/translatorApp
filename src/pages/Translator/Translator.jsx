@@ -114,7 +114,7 @@ function Translator() {
 
                   TranscriptTranslator(messageReceived, transcriptLanguage)
                     .then((translated) => {
-                      console.log("Translated text:", translated);
+                      // console.log("Translated text:", translated);
                       if (translated) {
                         setTranslatedReceivedMessage(translated);
                       }
