@@ -32,15 +32,15 @@ const Dashboard = () => {
 
   const columns = [
     {
-      title: "User 1 Transcript",
+      title: "First User Transcript",
       dataIndex: "user1_transcript",
     },
     {
-      title: "User 2 Transcript",
+      title: "Second User Transcript",
       dataIndex: "user2_transcript",
     },
     {
-      title: "Summary",
+      title: "Summary of Conversation",
       dataIndex: "summary",
     },
     {
