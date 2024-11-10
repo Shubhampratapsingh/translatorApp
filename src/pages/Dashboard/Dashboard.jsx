@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { Table } from "antd";
+import { Table, Input, Button } from "antd";
 import { useAuth } from "@clerk/clerk-react";
 import { openNotification } from "../../utils/notification";
 import { deleteTranscript, fetchTranscript } from "../../services";
 import { formatDate } from "../../utils/dateFormat";
-import { DeleteOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  QuestionCircleOutlined,
+  MinusCircleTwoTone,
+} from "@ant-design/icons";
+import { AskAI } from "../../utils/askAI";
 
 const Dashboard = () => {
   const [data, setData] = useState([]);
   const { getToken } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [aiReply, setAiReply] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -74,9 +82,76 @@ const Dashboard = () => {
       openNotification("error", "Error deleting transcript", "");
     }
   };
+
+  const handleAskAI = async (prompt, record) => {
+    if (prompt) {
+      const finalTranscript =
+        record?.user1_transcript + record?.user1_transcript;
+      try {
+        setLoading(true);
+        const response = await AskAI(finalTranscript, prompt);
+        console.log("final", response);
+        setAiReply(response);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      openNotification("error", "Enter prompt to ask AI", "");
+    }
+  };
+
+  const expandedRowRender = (record) => {
+    return (
+      <>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "1rem",
+            alignItems: "center",
+          }}
+        >
+          <Input.TextArea
+            rows={3}
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Enter your question for AI"
+          />
+          <Button
+            type="primary"
+            disabled={loading}
+            className="w-1/4"
+            onClick={() => handleAskAI(question, record)}
+          >
+            Ask AI
+          </Button>
+        </div>
+        <div>
+          <p className="p-2">{aiReply}</p>
+        </div>
+      </>
+    );
+  };
+
   return (
     <div className="p-6">
-      <Table columns={columns} dataSource={data} className="transcript-table" />
+      <Table
+        columns={columns}
+        dataSource={data}
+        className="transcript-table"
+        expandable={{
+          expandedRowRender,
+          rowExpandable: (record) => !!record.summary,
+          expandIcon: ({ expanded, onExpand, record }) =>
+            expanded ? (
+              <MinusCircleTwoTone onClick={(e) => onExpand(record, e)} />
+            ) : (
+              <QuestionCircleOutlined onClick={(e) => onExpand(record, e)} />
+            ),
+        }}
+      />
     </div>
   );
 };
