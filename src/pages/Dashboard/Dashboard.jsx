@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Table, Input, Button } from "antd";
+import { Table, Input, Button, Spin, Tooltip } from "antd";
 import { useAuth } from "@clerk/clerk-react";
 import { openNotification } from "../../utils/notification";
 import { deleteTranscript, fetchTranscript } from "../../services";
 import { formatDate } from "../../utils/dateFormat";
 import {
   DeleteOutlined,
-  QuestionCircleOutlined,
+  RobotOutlined,
   MinusCircleTwoTone,
 } from "@ant-design/icons";
 import { AskAI } from "../../utils/askAI";
@@ -87,10 +87,10 @@ const Dashboard = () => {
     if (prompt) {
       const finalTranscript =
         record?.user1_transcript + record?.user1_transcript;
+      const finalPrompt = prompt + " " + "in this session";
       try {
         setLoading(true);
-        const response = await AskAI(finalTranscript, prompt);
-        console.log("final", response);
+        const response = await AskAI(finalTranscript, finalPrompt);
         setAiReply(response);
       } catch (error) {
         console.log(error);
@@ -128,8 +128,8 @@ const Dashboard = () => {
             Ask AI
           </Button>
         </div>
-        <div>
-          <p className="p-2">{aiReply}</p>
+        <div className="text-center py-4">
+          {loading ? <Spin /> : <p className="text-start">{aiReply}</p>}
         </div>
       </>
     );
@@ -143,12 +143,17 @@ const Dashboard = () => {
         className="transcript-table"
         expandable={{
           expandedRowRender,
-          rowExpandable: (record) => !!record.summary,
+          rowExpandable: (record) => true,
           expandIcon: ({ expanded, onExpand, record }) =>
             expanded ? (
               <MinusCircleTwoTone onClick={(e) => onExpand(record, e)} />
             ) : (
-              <QuestionCircleOutlined onClick={(e) => onExpand(record, e)} />
+              <Tooltip title="Ask AI">
+                <RobotOutlined
+                  onClick={(e) => onExpand(record, e)}
+                  style={{ fontSize: "20px" }}
+                />
+              </Tooltip>
             ),
         }}
       />
