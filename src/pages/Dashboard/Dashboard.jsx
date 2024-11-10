@@ -15,8 +15,7 @@ const Dashboard = () => {
   const [data, setData] = useState([]);
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [question, setQuestion] = useState("");
-  const [aiReply, setAiReply] = useState("");
+  const [expandedRows, setExpandedRows] = useState({});
 
   useEffect(() => {
     fetchData();
@@ -75,7 +74,7 @@ const Dashboard = () => {
       const token = await getToken();
       const res = await deleteTranscript(record?.$id, token);
       if (res) {
-        openNotification("success", "Deleted succesfully.");
+        openNotification("success", "Deleted successfully.");
         fetchData();
       }
     } catch (error) {
@@ -86,12 +85,18 @@ const Dashboard = () => {
   const handleAskAI = async (prompt, record) => {
     if (prompt) {
       const finalTranscript =
-        record?.user1_transcript + record?.user1_transcript;
-      const finalPrompt = prompt + " " + "in this session";
+        "User one transcript is " +
+        record?.user1_transcript +
+        " and User two transcript is " +
+        record?.user2_transcript;
+      const finalPrompt = prompt + " in this session";
       try {
         setLoading(true);
         const response = await AskAI(finalTranscript, finalPrompt);
-        setAiReply(response);
+        setExpandedRows((prev) => ({
+          ...prev,
+          [record.$id]: { ...prev[record.$id], aiReply: response },
+        }));
       } catch (error) {
         console.log(error);
       } finally {
@@ -103,6 +108,7 @@ const Dashboard = () => {
   };
 
   const expandedRowRender = (record) => {
+    const rowState = expandedRows[record.$id] || {};
     return (
       <>
         <div
@@ -115,21 +121,30 @@ const Dashboard = () => {
         >
           <Input.TextArea
             rows={3}
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
+            value={rowState.question || ""}
+            onChange={(e) =>
+              setExpandedRows((prev) => ({
+                ...prev,
+                [record.$id]: { ...prev[record.$id], question: e.target.value },
+              }))
+            }
             placeholder="Enter your question for AI"
           />
           <Button
             type="primary"
             disabled={loading}
             className="w-1/4"
-            onClick={() => handleAskAI(question, record)}
+            onClick={() => handleAskAI(rowState.question, record)}
           >
             Ask AI
           </Button>
         </div>
         <div className="text-center py-4">
-          {loading ? <Spin /> : <p className="text-start">{aiReply}</p>}
+          {loading ? (
+            <Spin />
+          ) : (
+            <p className="text-start">{rowState.aiReply}</p>
+          )}
         </div>
       </>
     );
@@ -140,10 +155,10 @@ const Dashboard = () => {
       <Table
         columns={columns}
         dataSource={data}
-        className="transcript-table"
+        rowKey={(record) => record.$id}
         expandable={{
           expandedRowRender,
-          rowExpandable: (record) => true,
+          rowExpandable: (record) => record?.$id,
           expandIcon: ({ expanded, onExpand, record }) =>
             expanded ? (
               <MinusCircleTwoTone onClick={(e) => onExpand(record, e)} />
