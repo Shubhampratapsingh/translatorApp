@@ -3,6 +3,9 @@ import { openNotification } from "./notification";
 export const AskAI = async (transcript, prompt) => {
   const { available, defaultTemperature, defaultTopK, maxTopK } =
     await window?.ai?.languageModel?.capabilities();
+  await window?.ai?.languageModel.create({
+    systemPrompt: transcript,
+  });
 
   try {
     if (available !== "no") {
